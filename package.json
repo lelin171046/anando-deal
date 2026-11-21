@@ -1,0 +1,35 @@
+{
+  "name": "anando-deal",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Anando Deal - general e-commerce store",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build:shared": "npm run build -w @anando-deal/shared",
+    "dev": "npm run build:shared && concurrently -k -n web,api -c cyan,green \"npm run dev -w @anando-deal/web\" \"npm run dev -w @anando-deal/api\"",
+    "dev:web": "npm run dev -w @anando-deal/web",
+    "dev:api": "npm run dev -w @anando-deal/api",
+    "build": "npm run build:shared && npm run build -w @anando-deal/web && npm run build -w @anando-deal/api",
+    "typecheck": "npm run typecheck -w @anando-deal/shared && npm run typecheck -w @anando-deal/web && npm run typecheck -w @anando-deal/api",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "npm run test -w @anando-deal/api"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "concurrently": "^10.0.6",
+    "eslint": "^10.14.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "globals": "^17.14.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.1"
+  }
+}
