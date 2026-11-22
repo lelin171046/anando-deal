@@ -32,15 +32,6 @@ interface VariantRow {
   flashEndsAt: string;
 }
 
-interface NutritionRow {
-  calories: string;
-  protein: string;
-  carbs: string;
-  fat: string;
-  fiber: string;
-  sugar: string;
-}
-
 const emptyVariant: VariantRow = {
   label: '',
   grams: '',
@@ -51,15 +42,6 @@ const emptyVariant: VariantRow = {
   flashPrice: '',
   flashStartsAt: '',
   flashEndsAt: '',
-};
-
-const emptyNutrition: NutritionRow = {
-  calories: '',
-  protein: '',
-  carbs: '',
-  fat: '',
-  fiber: '',
-  sugar: '',
 };
 
 function toNumber(value: string): number | undefined {
@@ -88,21 +70,6 @@ function toDateTimeLocal(value: string | undefined): string {
 
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
   return local.toISOString().slice(0, 16);
-}
-
-function toNutritionRow(product?: ProductDto): NutritionRow {
-  if (!product?.nutrition) {
-    return { ...emptyNutrition };
-  }
-
-  return {
-    calories: numberToString(product.nutrition.calories),
-    protein: numberToString(product.nutrition.protein),
-    carbs: numberToString(product.nutrition.carbs),
-    fat: numberToString(product.nutrition.fat),
-    fiber: numberToString(product.nutrition.fiber),
-    sugar: numberToString(product.nutrition.sugar),
-  };
 }
 
 export default function AdminProductFormPage() {
@@ -142,7 +109,6 @@ function ProductForm({ product }: { product?: ProductDto }) {
   const [uploadingVideo, setUploadingVideo] = useState(false);
 
   const [name, setName] = useState(product?.name ?? '');
-  const [slug, setSlug] = useState(product?.slug ?? '');
   const [categoryId, setCategoryId] = useState(() => {
     if (!product) {
       return '';
@@ -150,11 +116,7 @@ function ProductForm({ product }: { product?: ProductDto }) {
 
     return typeof product.category === 'object' ? product.category._id : product.category;
   });
-  const [shortDescription, setShortDescription] = useState(product?.shortDescription ?? '');
   const [description, setDescription] = useState(product?.description ?? '');
-  const [badge, setBadge] = useState(product?.badge ?? '');
-  const [tags, setTags] = useState((product?.tags ?? []).join(', '));
-  const [ingredients, setIngredients] = useState(product?.ingredients ?? '');
   const [images, setImages] = useState<ImageRow[]>(() =>
     (product?.images ?? []).map((image) => ({
       url: image.url,
@@ -178,11 +140,7 @@ function ProductForm({ product }: { product?: ProductDto }) {
         }))
       : [{ ...emptyVariant }],
   );
-  const [nutrition, setNutrition] = useState<NutritionRow>(() => toNutritionRow(product));
-  const [isFeatured, setIsFeatured] = useState(product?.isFeatured ?? false);
   const [isActive, setIsActive] = useState(product?.isActive ?? true);
-  const [seoTitle, setSeoTitle] = useState('');
-  const [seoDescription, setSeoDescription] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState('');
 
@@ -252,9 +210,7 @@ function ProductForm({ product }: { product?: ProductDto }) {
 
     const payload = {
       name,
-      slug: slug.trim() ? slug.trim() : undefined,
       description,
-      shortDescription,
       categoryId,
       images: images
         .filter((image) => image.url.trim())
@@ -264,21 +220,6 @@ function ProductForm({ product }: { product?: ProductDto }) {
           alt: image.alt || undefined,
         })),
       video: video.trim(),
-      tags: tags
-        .split(',')
-        .map((tag) => tag.trim())
-        .filter(Boolean),
-      ingredients,
-      nutrition: Object.values(nutrition).some((value) => value.trim())
-        ? {
-            calories: toNumber(nutrition.calories),
-            protein: toNumber(nutrition.protein),
-            carbs: toNumber(nutrition.carbs),
-            fat: toNumber(nutrition.fat),
-            fiber: toNumber(nutrition.fiber),
-            sugar: toNumber(nutrition.sugar),
-          }
-        : undefined,
       variants: variants.map((variant) => ({
         label: variant.label,
         grams: toNumber(variant.grams),
@@ -290,13 +231,7 @@ function ProductForm({ product }: { product?: ProductDto }) {
         flashStartsAt: variant.flashStartsAt,
         flashEndsAt: variant.flashEndsAt,
       })),
-      isFeatured,
       isActive,
-      badge,
-      seo:
-        seoTitle.trim() || seoDescription.trim()
-          ? { title: seoTitle, description: seoDescription }
-          : undefined,
     };
 
     const parsed = productInputSchema.safeParse(payload);
@@ -309,8 +244,22 @@ function ProductForm({ product }: { product?: ProductDto }) {
         nextErrors[key] = issue.message;
       }
 
+      const details = Object.entries(nextErrors).map(([key, message]) => {
+        if (key === 'categoryId') {
+          return 'Category: select a valid category';
+        }
+
+        const variantMatch = key.match(/^variants\.(\d+)\.(.+)$/);
+
+        if (variantMatch) {
+          return `Variant ${Number(variantMatch[1]) + 1} ${variantMatch[2]}: ${message}`;
+        }
+
+        return `${key}: ${message}`;
+      });
+
       setErrors(nextErrors);
-      setFormError('Please fix the highlighted fields before saving.');
+      setFormError(`Please fix the highlighted fields before saving. ${details.join(' · ')}`);
       return;
     }
 
@@ -377,19 +326,6 @@ function ProductForm({ product }: { product?: ProductDto }) {
                   placeholder="Portable Room Heater"
                 />
               </Field>
-              <Field
-                label="Slug"
-                htmlFor="slug"
-                hint="Leave blank to generate from the name"
-                error={errors.slug}
-              >
-                <Input
-                  id="slug"
-                  value={slug}
-                  onChange={(event) => setSlug(event.target.value)}
-                  placeholder="reusable-hot-water-bottle"
-                />
-              </Field>
               <Field label="Category" htmlFor="category" error={errors.categoryId}>
                 <Select
                   id="category"
@@ -406,19 +342,6 @@ function ProductForm({ product }: { product?: ProductDto }) {
                 </Select>
               </Field>
               <Field
-                label="Short description"
-                htmlFor="shortDescription"
-                error={errors.shortDescription}
-                className="sm:col-span-2"
-              >
-                <Input
-                  id="shortDescription"
-                  value={shortDescription}
-                  onChange={(event) => setShortDescription(event.target.value)}
-                  placeholder="Warm, reusable comfort for cold nights."
-                />
-              </Field>
-              <Field
                 label="Full description"
                 htmlFor="description"
                 error={errors.description}
@@ -430,27 +353,6 @@ function ProductForm({ product }: { product?: ProductDto }) {
                   onChange={(event) => setDescription(event.target.value)}
                   rows={5}
                   placeholder="Tell customers what makes this product special."
-                />
-              </Field>
-              <Field
-                label="Badge"
-                htmlFor="badge"
-                hint="Shown on product cards"
-                error={errors.badge}
-              >
-                <Input
-                  id="badge"
-                  value={badge}
-                  onChange={(event) => setBadge(event.target.value)}
-                  placeholder="Best seller"
-                />
-              </Field>
-              <Field label="Tags" htmlFor="tags" hint="Comma separated" error={errors.tags}>
-                <Input
-                  id="tags"
-                  value={tags}
-                  onChange={(event) => setTags(event.target.value)}
-                  placeholder="hot water bottle, winter, warmth"
                 />
               </Field>
             </div>
@@ -514,33 +416,6 @@ function ProductForm({ product }: { product?: ProductDto }) {
                       />
                     </Field>
                     <Field
-                      label="Grams"
-                      htmlFor={`variant-grams-${index}`}
-                      error={errors[`variants.${index}.grams`]}
-                    >
-                      <Input
-                        id={`variant-grams-${index}`}
-                        type="number"
-                        min="0"
-                        value={variant.grams}
-                        onChange={(event) => updateVariant(index, { grams: event.target.value })}
-                        placeholder="250"
-                      />
-                    </Field>
-                    <Field
-                      label="SKU"
-                      htmlFor={`variant-sku-${index}`}
-                      hint="Auto-generated if blank"
-                      error={errors[`variants.${index}.sku`]}
-                    >
-                      <Input
-                        id={`variant-sku-${index}`}
-                        value={variant.sku}
-                        onChange={(event) => updateVariant(index, { sku: event.target.value })}
-                        placeholder="PRODUCT-OPTION"
-                      />
-                    </Field>
-                    <Field
                       label="Price (৳)"
                       htmlFor={`variant-price-${index}`}
                       error={errors[`variants.${index}.price`]}
@@ -552,22 +427,6 @@ function ProductForm({ product }: { product?: ProductDto }) {
                         value={variant.price}
                         onChange={(event) => updateVariant(index, { price: event.target.value })}
                         placeholder="450"
-                      />
-                    </Field>
-                    <Field
-                      label="Compare at (৳)"
-                      htmlFor={`variant-compare-${index}`}
-                      error={errors[`variants.${index}.compareAtPrice`]}
-                    >
-                      <Input
-                        id={`variant-compare-${index}`}
-                        type="number"
-                        min="0"
-                        value={variant.compareAtPrice}
-                        onChange={(event) =>
-                          updateVariant(index, { compareAtPrice: event.target.value })
-                        }
-                        placeholder="520"
                       />
                     </Field>
                     <Field
@@ -584,125 +443,12 @@ function ProductForm({ product }: { product?: ProductDto }) {
                         placeholder="30"
                       />
                     </Field>
-                    <Field
-                      label="Flash sale price (৳)"
-                      htmlFor={`variant-flash-price-${index}`}
-                      hint="Leave blank for no flash sale"
-                      error={errors[`variants.${index}.flashPrice`]}
-                    >
-                      <Input
-                        id={`variant-flash-price-${index}`}
-                        type="number"
-                        min="1"
-                        value={variant.flashPrice}
-                        onChange={(event) =>
-                          updateVariant(index, { flashPrice: event.target.value })
-                        }
-                        placeholder="390"
-                      />
-                    </Field>
-                    <Field
-                      label="Flash sale starts"
-                      htmlFor={`variant-flash-start-${index}`}
-                      hint="Leave blank to start now"
-                      error={errors[`variants.${index}.flashStartsAt`]}
-                    >
-                      <Input
-                        id={`variant-flash-start-${index}`}
-                        type="datetime-local"
-                        value={variant.flashStartsAt}
-                        onChange={(event) =>
-                          updateVariant(index, { flashStartsAt: event.target.value })
-                        }
-                      />
-                    </Field>
-                    <Field
-                      label="Flash sale ends"
-                      htmlFor={`variant-flash-end-${index}`}
-                      hint="Used by the homepage countdown"
-                      error={errors[`variants.${index}.flashEndsAt`]}
-                    >
-                      <Input
-                        id={`variant-flash-end-${index}`}
-                        type="datetime-local"
-                        value={variant.flashEndsAt}
-                        onChange={(event) =>
-                          updateVariant(index, { flashEndsAt: event.target.value })
-                        }
-                      />
-                    </Field>
                   </div>
                 </div>
               ))}
             </div>
           </section>
 
-          <section className="rounded-2xl border bg-card p-5">
-            <h2 className="text-sm font-semibold">Extra details</h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <Field
-                label="Materials / contents"
-                htmlFor="ingredients"
-                error={errors.ingredients}
-                className="sm:col-span-2"
-              >
-                <Textarea
-                  id="ingredients"
-                  value={ingredients}
-                  onChange={(event) => setIngredients(event.target.value)}
-                  rows={2}
-                  placeholder="Material, features, or package contents."
-                />
-              </Field>
-              {(
-                [
-                  ['calories', 'Calories'],
-                  ['protein', 'Protein (g)'],
-                  ['carbs', 'Carbs (g)'],
-                  ['fat', 'Fat (g)'],
-                  ['fiber', 'Fibre (g)'],
-                  ['sugar', 'Sugar (g)'],
-                ] as Array<[keyof NutritionRow, string]>
-              ).map(([key, label]) => (
-                <Field
-                  key={key}
-                  label={label}
-                  htmlFor={`nutrition-${key}`}
-                  error={errors[`nutrition.${key}`]}
-                >
-                  <Input
-                    id={`nutrition-${key}`}
-                    type="number"
-                    min="0"
-                    value={nutrition[key]}
-                    onChange={(event) =>
-                      setNutrition((current) => ({ ...current, [key]: event.target.value }))
-                    }
-                  />
-                </Field>
-              ))}
-              <Field label="SEO title" htmlFor="seoTitle" error={errors['seo.title']}>
-                <Input
-                  id="seoTitle"
-                  value={seoTitle}
-                  onChange={(event) => setSeoTitle(event.target.value)}
-                  placeholder="Portable Room Heater in Bangladesh"
-                />
-              </Field>
-              <Field
-                label="SEO description"
-                htmlFor="seoDescription"
-                error={errors['seo.description']}
-              >
-                <Input
-                  id="seoDescription"
-                  value={seoDescription}
-                  onChange={(event) => setSeoDescription(event.target.value)}
-                  placeholder="Winter essentials delivered across Bangladesh."
-                />
-              </Field>
-            </div>
-          </section>
         </div>
 
         <div className="space-y-5">
@@ -761,13 +507,6 @@ function ProductForm({ product }: { product?: ProductDto }) {
                         placeholder="https://…"
                         className="h-9 text-xs"
                         aria-label={`Image ${index + 1} URL`}
-                      />
-                      <Input
-                        value={image.alt}
-                        onChange={(event) => updateImage(index, { alt: event.target.value })}
-                        placeholder="Alt text"
-                        className="h-9 text-xs"
-                        aria-label={`Image ${index + 1} alt text`}
                       />
                     </div>
                     <Button
@@ -871,20 +610,6 @@ function ProductForm({ product }: { product?: ProductDto }) {
                   type="checkbox"
                   checked={isActive}
                   onChange={(event) => setIsActive(event.target.checked)}
-                  className="h-4 w-4 accent-[var(--primary)]"
-                />
-              </label>
-              <label className="flex items-center justify-between gap-3 rounded-xl border bg-background px-3 py-2.5 text-sm">
-                <span>
-                  <span className="font-medium">Featured</span>
-                  <span className="block text-xs text-muted-foreground">
-                    Highlight on the home page
-                  </span>
-                </span>
-                <input
-                  type="checkbox"
-                  checked={isFeatured}
-                  onChange={(event) => setIsFeatured(event.target.checked)}
                   className="h-4 w-4 accent-[var(--primary)]"
                 />
               </label>
