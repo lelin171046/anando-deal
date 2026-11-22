@@ -93,6 +93,7 @@ export interface StoreSettingsDto {
   deliveryZones: Array<{ name: string; charge: number }>;
   deliveryBenefits: DeliveryBenefitSettings[];
   heroCarousel: HeroCarouselDto;
+  flashDealsEnabled: boolean;
   featuredCategories: Array<{ id: string; name: string; slug: string; image: string }>;
 }
 
@@ -218,6 +219,7 @@ export interface AdminSettingsDto {
     whatsapp: string;
   };
   heroCarousel: HeroCarouselDto;
+  flashDealsEnabled: boolean;
 }
 
 export interface OrderLinkDto {

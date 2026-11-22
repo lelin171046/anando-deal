@@ -20,6 +20,7 @@ export interface PublicSettings {
   deliveryZones: Array<{ name: string; charge: number }>;
   deliveryBenefits: DeliveryBenefitSettings[];
   heroCarousel: HeroCarouselSettings;
+  flashDealsEnabled: boolean;
   featuredCategories: Array<{ id: string; name: string; slug: string; image: string }>;
 }
 
@@ -145,6 +146,7 @@ export async function getPublicSettings(): Promise<PublicSettings> {
       settings?.heroCarousel as HeroCarouselSettings | undefined,
       false,
     ),
+    flashDealsEnabled: settings?.flashDealsEnabled ?? true,
     featuredCategories: await getFeaturedCategories(settings?.featuredCategoryIds),
   };
 }
@@ -211,6 +213,7 @@ export async function getAdminSettings(): Promise<AdminSettings> {
       whatsapp: settings?.socialLinks?.whatsapp ?? '',
     },
     heroCarousel: mapHeroCarousel(settings?.heroCarousel as HeroCarouselSettings | undefined, true),
+    flashDealsEnabled: settings?.flashDealsEnabled ?? true,
     featuredCategories: await getFeaturedCategories(settings?.featuredCategoryIds),
   };
 }

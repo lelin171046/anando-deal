@@ -125,6 +125,10 @@ const settingsSchema = new Schema(
       type: heroCarouselSchema,
       default: undefined,
     },
+    flashDealsEnabled: {
+      type: Boolean,
+      default: true,
+    },
     featuredCategoryIds: {
       type: [{ type: Schema.Types.ObjectId, ref: 'Category' }],
       default: [],

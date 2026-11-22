@@ -133,7 +133,7 @@ export default function ShopPage() {
         </div>
 
         {isLoading && (
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, index) => (
               <div
                 key={index}
@@ -170,7 +170,7 @@ export default function ShopPage() {
 
         {data && data.items.length > 0 && (
           <>
-            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
               {data.items.map((product) => (
                 <ProductCard key={product._id} product={product} />
               ))}

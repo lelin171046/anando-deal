@@ -93,14 +93,14 @@ export function ProductCard({ product }: { product: ProductDto }) {
           </div>
         </div>
 
-        <div className="flex flex-1 flex-col p-4">
+        <div className="flex flex-1 flex-col p-3 sm:p-4">
           <p className="min-h-4 text-[11px] font-semibold uppercase leading-4 tracking-[0.14em] text-muted-foreground">
             {category?.name ?? '\u00A0'}
           </p>
-          <h3 className="mt-1.5 line-clamp-2 min-h-11 text-base font-semibold leading-snug">
+          <h3 className="mt-1.5 line-clamp-2 min-h-10 text-sm font-semibold leading-snug sm:min-h-11 sm:text-base">
             {product.name}
           </h3>
-          <p className="mt-1 line-clamp-2 min-h-10 text-sm leading-5 text-muted-foreground">
+          <p className="mt-1 line-clamp-2 min-h-8 text-xs leading-4 text-muted-foreground sm:min-h-10 sm:text-sm sm:leading-5">
             {product.shortDescription || '\u00A0'}
           </p>
 
@@ -110,7 +110,7 @@ export function ProductCard({ product }: { product: ProductDto }) {
                 {oldPrice ? 'Sale price' : 'From'}
               </p>
               <div className="flex flex-wrap items-baseline gap-2">
-                <p className="text-lg font-semibold text-primary">
+                <p className="text-base font-semibold text-primary sm:text-lg">
                   {formatBdt(product.effectiveBasePrice)}
                 </p>
                 {oldPrice && (
@@ -132,21 +132,21 @@ export function ProductCard({ product }: { product: ProductDto }) {
         </div>
       </Link>
 
-      <div className="flex gap-2 border-t border-border/70 p-3">
+      <div className="flex flex-col gap-2 border-t border-border/70 p-2 sm:flex-row sm:p-3">
         {cartItem ? (
           <>
             <button
               type="button"
               onClick={() => addToCart(cartItem)}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-primary bg-background px-3 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/5"
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-primary bg-background px-2 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/5 sm:px-3 sm:text-sm"
             >
-              <ShoppingBag className="h-4 w-4" />
+              <ShoppingBag className="hidden h-4 w-4 sm:block" />
               Add to cart
             </button>
             <button
               type="button"
               onClick={buyNow}
-              className="flex flex-1 items-center justify-center rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+              className="flex flex-1 items-center justify-center rounded-lg bg-primary px-2 py-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90 sm:px-3 sm:text-sm"
             >
               Buy now
             </button>

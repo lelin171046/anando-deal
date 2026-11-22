@@ -550,6 +550,7 @@ export const settingsUpdateSchema = z.object({
     })
     .optional(),
   heroCarousel: heroCarouselSettingsSchema.optional(),
+  flashDealsEnabled: z.boolean().optional(),
   featuredCategoryIds: z.array(objectIdSchema).max(8).optional(),
   deliveryBenefits: z.array(deliveryBenefitSchema).max(6).optional(),
 });

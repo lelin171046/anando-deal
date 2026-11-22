@@ -84,6 +84,7 @@ interface SettingsFormState {
   heroAutoplaySeconds: string;
   heroPauseOnHover: boolean;
   heroSlides: HeroSlideRow[];
+  flashDealsEnabled: boolean;
 }
 
 function toDateTimeLocal(value: string | undefined): string {
@@ -146,6 +147,7 @@ function toFormState(settings: AdminSettingsDto): SettingsFormState {
       theme: slide.theme,
       isActive: slide.isActive,
     })),
+    flashDealsEnabled: settings.flashDealsEnabled ?? true,
   };
 }
 
@@ -365,6 +367,7 @@ function SettingsForm({ settings }: { settings: AdminSettingsDto }) {
         instagram: form.instagram,
         whatsapp: form.whatsapp,
       },
+      flashDealsEnabled: form.flashDealsEnabled,
       heroCarousel: {
         autoplaySeconds: form.heroAutoplaySeconds === '' ? 6 : form.heroAutoplaySeconds,
         pauseOnHover: form.heroPauseOnHover,
@@ -421,6 +424,26 @@ function SettingsForm({ settings }: { settings: AdminSettingsDto }) {
       </PageHeader>
 
       {formError && <ErrorBlock message={formError} />}
+
+      <section className="rounded-2xl border bg-card p-5">
+        <h2 className="text-sm font-semibold">Flash deals</h2>
+        <label className="mt-4 flex items-center justify-between gap-3 rounded-xl border bg-background px-3 py-2.5 text-sm">
+          <span>
+            <span className="font-medium">Show flash deals on homepage</span>
+            <span className="block text-xs text-muted-foreground">
+              Turn this off to hide the section. Add or remove deals from each product.
+            </span>
+          </span>
+          <input
+            type="checkbox"
+            checked={form.flashDealsEnabled}
+            onChange={(event) =>
+              setForm((current) => ({ ...current, flashDealsEnabled: event.target.checked }))
+            }
+            className="h-4 w-4 accent-[var(--primary)]"
+          />
+        </label>
+      </section>
 
       <section className="rounded-2xl border bg-card p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

@@ -74,7 +74,7 @@ const steps = [
 
 function ProductGridSkeleton() {
   return (
-    <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="mt-7 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
       {Array.from({ length: 4 }).map((_, index) => (
         <div key={index} className="overflow-hidden rounded-2xl border bg-card">
           <Skeleton className="aspect-square rounded-none" />
@@ -193,7 +193,7 @@ export default function HomePage() {
           <DeliveryBenefits benefits={settings?.deliveryBenefits ?? []} />
         </div>
 
-        <FlashSaleSection />
+        {settings?.flashDealsEnabled !== false && <FlashSaleSection />}
 
         <CategorySection featuredCategories={settings?.featuredCategories ?? []} />
 
@@ -224,7 +224,7 @@ export default function HomePage() {
               whileInView="show"
               viewport={{ once: true, amount: 0.15 }}
               variants={stagger}
-              className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4"
+              className="mt-7 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4"
             >
               {products.slice(0, 4).map((product) => (
                 <motion.div key={product._id} variants={fadeUp}>
@@ -254,7 +254,7 @@ export default function HomePage() {
               href="/shop?sort=newest"
               linkLabel="Shop new arrivals"
             />
-            <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-7 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
               {products.slice(4, 8).map((product) => (
                 <ProductCard key={product._id} product={product} />
               ))}

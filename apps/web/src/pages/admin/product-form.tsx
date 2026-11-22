@@ -27,6 +27,7 @@ interface VariantRow {
   compareAtPrice: string;
   stock: string;
   sku: string;
+  flashDeal: boolean;
   flashPrice: string;
   flashStartsAt: string;
   flashEndsAt: string;
@@ -39,6 +40,7 @@ const emptyVariant: VariantRow = {
   compareAtPrice: '',
   stock: '0',
   sku: '',
+  flashDeal: false,
   flashPrice: '',
   flashStartsAt: '',
   flashEndsAt: '',
@@ -134,6 +136,7 @@ function ProductForm({ product }: { product?: ProductDto }) {
           compareAtPrice: numberToString(variant.compareAtPrice),
           stock: String(variant.stock),
           sku: variant.sku,
+          flashDeal: Boolean(variant.flashPrice),
           flashPrice: numberToString(variant.flashPrice),
           flashStartsAt: toDateTimeLocal(variant.flashStartsAt),
           flashEndsAt: toDateTimeLocal(variant.flashEndsAt),
@@ -203,6 +206,25 @@ function ProductForm({ product }: { product?: ProductDto }) {
     }
   };
 
+  const showValidationErrors = (nextErrors: Record<string, string>) => {
+    const details = Object.entries(nextErrors).map(([key, message]) => {
+      if (key === 'categoryId') {
+        return 'Category: select a valid category';
+      }
+
+      const variantMatch = key.match(/^variants\.(\d+)\.(.+)$/);
+
+      if (variantMatch) {
+        return `Variant ${Number(variantMatch[1]) + 1} ${variantMatch[2]}: ${message}`;
+      }
+
+      return `${key}: ${message}`;
+    });
+
+    setErrors(nextErrors);
+    setFormError(`Please fix the highlighted fields before saving. ${details.join(' · ')}`);
+  };
+
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError('');
@@ -227,12 +249,28 @@ function ProductForm({ product }: { product?: ProductDto }) {
         compareAtPrice: toNumber(variant.compareAtPrice),
         stock: toNumber(variant.stock) ?? 0,
         sku: variant.sku,
-        flashPrice: toNumber(variant.flashPrice),
-        flashStartsAt: variant.flashStartsAt,
-        flashEndsAt: variant.flashEndsAt,
+        flashPrice: variant.flashDeal ? toNumber(variant.flashPrice) : undefined,
+        flashStartsAt: variant.flashDeal ? variant.flashStartsAt : undefined,
+        flashEndsAt: variant.flashDeal ? variant.flashEndsAt : undefined,
       })),
       isActive,
     };
+
+    const missingFlashPrices = variants.reduce<Record<string, string>>(
+      (accumulator, variant, index) => {
+        if (variant.flashDeal && !variant.flashPrice.trim()) {
+          accumulator[`variants.${index}.flashPrice`] = 'Flash sale price is required';
+        }
+
+        return accumulator;
+      },
+      {},
+    );
+
+    if (Object.keys(missingFlashPrices).length > 0) {
+      showValidationErrors(missingFlashPrices);
+      return;
+    }
 
     const parsed = productInputSchema.safeParse(payload);
 
@@ -244,22 +282,7 @@ function ProductForm({ product }: { product?: ProductDto }) {
         nextErrors[key] = issue.message;
       }
 
-      const details = Object.entries(nextErrors).map(([key, message]) => {
-        if (key === 'categoryId') {
-          return 'Category: select a valid category';
-        }
-
-        const variantMatch = key.match(/^variants\.(\d+)\.(.+)$/);
-
-        if (variantMatch) {
-          return `Variant ${Number(variantMatch[1]) + 1} ${variantMatch[2]}: ${message}`;
-        }
-
-        return `${key}: ${message}`;
-      });
-
-      setErrors(nextErrors);
-      setFormError(`Please fix the highlighted fields before saving. ${details.join(' · ')}`);
+      showValidationErrors(nextErrors);
       return;
     }
 
@@ -444,6 +467,64 @@ function ProductForm({ product }: { product?: ProductDto }) {
                       />
                     </Field>
                   </div>
+
+                  <label className="mt-3 flex items-center justify-between gap-3 rounded-xl border bg-card px-3 py-2 text-sm">
+                    <span>
+                      <span className="font-medium">Flash deal</span>
+                      <span className="block text-xs text-muted-foreground">
+                        Add this variant to Flash deals. Uncheck to remove it.
+                      </span>
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={variant.flashDeal}
+                      onChange={(event) => {
+                        const checked = event.target.checked;
+                        updateVariant(index, {
+                          flashDeal: checked,
+                          flashPrice: checked ? variant.flashPrice : '',
+                          flashStartsAt: checked ? variant.flashStartsAt : '',
+                          flashEndsAt: checked ? variant.flashEndsAt : '',
+                        });
+                      }}
+                      className="h-4 w-4 accent-[var(--primary)]"
+                    />
+                  </label>
+
+                  {variant.flashDeal && (
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <Field
+                        label="Flash sale price (৳)"
+                        htmlFor={`variant-flash-price-${index}`}
+                        error={errors[`variants.${index}.flashPrice`]}
+                      >
+                        <Input
+                          id={`variant-flash-price-${index}`}
+                          type="number"
+                          min="1"
+                          value={variant.flashPrice}
+                          onChange={(event) =>
+                            updateVariant(index, { flashPrice: event.target.value })
+                          }
+                          placeholder="390"
+                        />
+                      </Field>
+                      <Field
+                        label="Ends at (optional)"
+                        htmlFor={`variant-flash-end-${index}`}
+                        error={errors[`variants.${index}.flashEndsAt`]}
+                      >
+                        <Input
+                          id={`variant-flash-end-${index}`}
+                          type="datetime-local"
+                          value={variant.flashEndsAt}
+                          onChange={(event) =>
+                            updateVariant(index, { flashEndsAt: event.target.value })
+                          }
+                        />
+                      </Field>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

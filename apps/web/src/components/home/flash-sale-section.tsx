@@ -87,7 +87,7 @@ export function FlashSaleSection() {
       </div>
 
       {isLoading ? (
-        <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-7 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
             <div key={index} className="overflow-hidden rounded-2xl border bg-card">
               <Skeleton className="aspect-square rounded-none" />
@@ -105,7 +105,7 @@ export function FlashSaleSection() {
           <p className="mt-1 text-sm text-muted-foreground">Please try again in a moment.</p>
         </div>
       ) : products.length > 0 ? (
-        <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-7 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
           {products.map((product) => (
             <ProductCard key={product._id} product={product} />
           ))}
